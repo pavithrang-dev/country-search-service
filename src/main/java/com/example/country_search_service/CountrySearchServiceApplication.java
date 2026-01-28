@@ -8,6 +8,7 @@ public class CountrySearchServiceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CountrySearchServiceApplication.class, args);
+		System.out.println("Hello world!!!");
 	}
 
 }
