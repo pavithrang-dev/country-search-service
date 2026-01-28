@@ -12,14 +12,41 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
 public class CountySearchService {
-    private final CountyRepository countyRepository;
-    private final CountyMapper countyMapper;
+    private final CountyRepository repository;
+    private final CountyMapper mapper;
 
-    public List<CountyDto> suggest(String q){
-        String normalized = q.trim().toLowerCase();
-        Pageable limit = PageRequest.of(0, 5);
-        return countyRepository.search(normalized,limit).stream().map(countyMapper::toDto).toList();
+    public CountySearchService(CountyRepository repository, CountyMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
     }
+
+    public List<CountyDto> suggest(String q) {
+
+        String normalized = q.trim();
+
+        Pageable limit = PageRequest.of(0, 5);
+
+        // STATE-ONLY SEARCH
+        if (normalized.length() == 2 && !normalized.contains(",")) {
+            return repository
+                    .findByStateIgnoreCaseOrderByNameAsc(normalized, limit)
+                    .stream()
+                    .map(mapper::toDto)
+                    .toList();
+        }
+
+        // NAME or NAME + STATE
+        String[] parts = normalized.split(",");
+
+        String name = parts[0].trim();
+        String state = parts.length > 1 ? parts[1].trim() : null;
+
+        return repository
+                .searchByNameAndState(name, state, limit)
+                .stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
 }
